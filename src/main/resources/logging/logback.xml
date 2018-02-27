@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+    <property name="DEFAULT_LOG_FILE_PATH" value="${LOGGER_DIR:-/var/log}/base-backend.log"/>
+    <property name="BUSINESS_LOG_FILE_PATH" value="${LOGGER_DIR:-/var/log}/base-backend.business"/>
+
+    <include resource="org/springframework/boot/logging/logback/base.xml" />
+
+    <springProfile name="local">
+        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+                <charset>utf8</charset>
+            </encoder>
+        </appender>
+    </springProfile>
+    <springProfile name="ci,qa,uat,str,prod">
+        <appender name="DEFAULT_APPENDER_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <encoder>
+                <pattern>${FILE_LOG_PATTERN}</pattern>
+            </encoder>
+            <file>${DEFAULT_LOG_FILE_PATH}</file>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>INFO</level>
+            </filter>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${DEFAULT_LOG_FILE_PATH}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+                <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                    <maxFileSize>50MB</maxFileSize>
+                </timeBasedFileNamingAndTriggeringPolicy>
+                <maxHistory>5</maxHistory>
+            </rollingPolicy>
+        </appender>
+        <appender name="BUSINESS_APPENDER_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <encoder>
+                <pattern>${FILE_LOG_PATTERN}</pattern>
+            </encoder>
+            <file>${BUSINESS_LOG_FILE_PATH}</file>
+            <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+                <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+                    <marker>BUSINESS</marker>
+                </evaluator>
+                <onMismatch>DENY</onMismatch>
+                <onMatch>NEUTRAL</onMatch>
+            </filter>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${BUSINESS_LOG_FILE_PATH}.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+                <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                    <maxFileSize>50MB</maxFileSize>
+                </timeBasedFileNamingAndTriggeringPolicy>
+                <maxHistory>5</maxHistory>
+            </rollingPolicy>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="DEFAULT_APPENDER_LOG"/>
+            <appender-ref ref="BUSINESS_APPENDER_LOG"/>
+        </root>
+    </springProfile>
+</configuration>
